@@ -1,0 +1,55 @@
+// JitPack build for the prebuilt MobileID Android SDK .aar.
+//
+// This repo ships a compiled .aar only (no source). JitPack invokes
+// `./gradlew publishToMavenLocal`; the maven-publish plugin below wraps the
+// prebuilt artifact in a generated POM that declares the runtime transitive
+// dependencies the engine needs (the .aar itself carries no dependency
+// metadata). No Android Gradle Plugin is required — this keeps the JitPack
+// build fast and free of an Android SDK requirement.
+plugins {
+    id 'maven-publish'
+}
+
+group = 'com.github.WiinventDevTeam'
+version = '1.0.0'
+
+def aarFile = file("mobile-id-android-${version}.aar")
+
+publishing {
+    repositories {
+        maven {
+            name = 'localRepo'
+            url = uri("${rootDir}/maven")
+        }
+    }
+    publications {
+        release(MavenPublication) {
+            groupId = group
+            artifactId = 'mobileid-android-sdk'
+            version = version
+
+            artifact(aarFile) {
+                extension = 'aar'
+            }
+
+            // The .aar carries no dependency metadata, so declare the engine's
+            // runtime transitive dependencies here. JitPack consumers resolve
+            // these from mavenCentral()/google() automatically.
+            pom.withXml {
+                def deps = asNode().appendNode('dependencies')
+                [
+                    ['org.jetbrains.kotlin', 'kotlin-stdlib-jdk8', '2.2.21'],
+                    ['androidx.annotation', 'annotation', '1.9.1'],
+                    ['androidx.core', 'core-ktx', '1.13.1'],
+                    ['com.squareup.okhttp3', 'okhttp', '5.3.2'],
+                ].each { g, a, v ->
+                    def dep = deps.appendNode('dependency')
+                    dep.appendNode('groupId', g)
+                    dep.appendNode('artifactId', a)
+                    dep.appendNode('version', v)
+                    dep.appendNode('scope', 'runtime')
+                }
+            }
+        }
+    }
+}
