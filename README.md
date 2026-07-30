@@ -42,7 +42,11 @@ sdk.configure(
             "84901234567",
             onSuccess = {
                 sdk.doAuthentication("84901234567", object : AuthListener {
-                    override fun onSuccess(result: String) { /* đổi result với backend lấy token */ }
+                    override fun onSuccess(result: String) {
+                        // `result` là redirect URI đầy đủ, không phải code.
+                        // Tách `code` rồi gửi backend để đổi token.
+                        val code = Uri.parse(result).getQueryParameter("code")
+                    }
                     override fun onFail(result: MobileIdError) { /* xử lý lỗi */ }
                 })
             },
