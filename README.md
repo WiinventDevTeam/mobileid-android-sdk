@@ -21,7 +21,7 @@ Yêu cầu: minSdk 21, Java 11.
 
    ```gradle
    dependencies {
-       implementation "com.github.WiinventDevTeam:mobileid-android-sdk:1.0.0"
+       implementation "com.github.WiinventDevTeam:mobileid-android-sdk:1.0.3"
    }
    ```
 
@@ -33,10 +33,13 @@ của backend bạn. Không cần khai gì thêm trong app.
 ```kotlin
 val sdk = MobileIdSdk(activity)
 
-// 1. Nạp cấu hình từ backend.
+// 1. Nạp cấu hình từ backend (nhận chuỗi raw JSON đã loại bỏ internal payload).
 sdk.configure(
     configUrl = "https://your-backend.com/api/sdk-config",
-    onSuccess = {
+    onSuccess = { rawJsonString ->
+        // rawJsonString chứa JSON sạch để đối tác bóc tách các cờ cấu hình tuỳ biến (smsFallback, brand...)
+        println("Config thành công: $rawJsonString")
+
         // 2. Kiểm tra coverage rồi xác thực.
         sdk.checkCoverageWithPhoneNumber(
             "84901234567",
@@ -55,8 +58,15 @@ sdk.configure(
     },
     onError = { error ->
         // Lỗi resolve cấu hình (mạng, backend từ chối, app không được phép…).
+        println("Lỗi: ${error.errorMessage} (${error.errorCode})")
+        if (error.rawResponse != null) {
+            println("Raw error từ server: ${error.rawResponse}")
+        }
     }
 )
+
+// Hoặc overload tương thích ngược không nhận data:
+// sdk.configure(configUrl = "...", onSuccess = { /* thành công */ }, onError = { ... })
 ```
 
 `configure` nhận thêm tham số `headers: Map<String, String>` (tùy chọn) nếu backend của
@@ -64,7 +74,8 @@ bạn yêu cầu header auth riêng (vd `Authorization`). SDK không quy định
 
 ### Xử lý lỗi
 
-`MobileIdError` gồm `errorCode` và `errorMessage`. Nên xử lý theo `errorCode`.
+`MobileIdError` gồm `errorCode`, `errorMessage` và `rawResponse` (chứa phản hồi thô từ server khi cấu hình lỗi). Nên xử lý theo `errorCode`.
 
 > **Lưu ý**: xác thực qua mạng di động cần thiết bị thật kết nối **cellular data** —
 > không chạy được trên Wifi hoặc emulator.
+
