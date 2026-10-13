@@ -21,7 +21,7 @@ Yêu cầu: minSdk 21, Java 11.
 
    ```gradle
    dependencies {
-       implementation "com.github.WiinventDevTeam:mobileid-android-sdk:1.0.3"
+       implementation "com.github.WiinventDevTeam:mobileid-android-sdk:1.1.0"
    }
    ```
 
@@ -33,11 +33,10 @@ của backend bạn. Không cần khai gì thêm trong app.
 ```kotlin
 val sdk = MobileIdSdk(activity)
 
-// 1. Nạp cấu hình từ backend (nhận chuỗi raw JSON đã loại bỏ internal payload).
+// 1. Nạp cấu hình từ backend (hàm configure trả về raw JSON chuỗi response).
 sdk.configure(
     configUrl = "https://your-backend.com/api/sdk-config",
     onSuccess = { rawJsonString ->
-        // rawJsonString chứa JSON sạch để đối tác bóc tách các cờ cấu hình tuỳ biến (smsFallback, brand...)
         println("Config thành công: $rawJsonString")
 
         // 2. Kiểm tra coverage rồi xác thực.
